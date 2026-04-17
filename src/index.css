@@ -1,34 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Press+Start+2P&display=swap');
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════
+   DESIGN TOKENS — Snake Food: Reforged
+   Cores neon, glassmorphism, e tipografia
+═══════════════════════════════════════════════════════ */
+@theme {
+  --color-bg: var(--theme-bg);
+  --color-bg-light: var(--theme-bgLight);
+  --color-card: var(--theme-card);
+  --color-grid: var(--theme-border);
+  --color-neon-blue: var(--theme-primary);
+  --color-neon-blue-glow: var(--theme-primary);
+  --color-neon-green: var(--theme-secondary);
+  --color-neon-green-dark: var(--theme-secondary);
+  --color-gold: var(--theme-accent);
+  --color-white: var(--theme-text);
+  --color-gray: var(--theme-textDim);
+  --color-red: #ff3c50; /* Dano/Perigo mantido constante */
+  --color-border: var(--theme-border);
+  --color-surface: var(--theme-glass);
+  --color-surface-light: rgba(255, 255, 255, 0.05);
+  --color-surface-border: var(--theme-border);
+
+  --font-sans: 'Outfit', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════
+   GLOBAL RESETS
+═══════════════════════════════════════════════════════ */
 * {
-  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
 }
 
+/* Esconde scrollbars globalmente mantendo scroll funcional */
+*::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+.skill-icon {
+  font-size: 1.5rem !important;
+  display: inline-block;
+  line-height: 1;
+}
+
 :root {
-  --bg: #080816;
-  --panel: #0f0f19;
-  --card: #19192d;
-  --grid: #191928;
-  --player: #00a0ff;
-  --player-glow: #00c8ff;
-  --fake: #f0f0f5;
-  --snake-head: #00ff82;
-  --snake-body: #00b464;
-  --coin: #ffd700;
-  --white: #f5f5ff;
-  --gray: #8c8caa;
-  --red: #ff3c50;
-  --border: #32325a;
-  
-  font-family: 'Outfit', 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
   color-scheme: dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: var(--bg);
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -37,41 +55,82 @@
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
   overflow: hidden;
+  background-color: var(--color-bg);
+  color: var(--color-white);
+  font-family: var(--font-sans);
 }
 
 #root {
   width: 100%;
-  height: 100vh;
+  height: var(--app-h, 100dvh);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Glassmorphism Classes */
-.glass {
-  background: rgba(15, 15, 25, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* ═══════════════════════════════════════════════════════
+   RETRO FIDELITY (NOKIA / GAMEBOY)
+   Apaga efeitos modernos e aplica tipografia pixelada
+═══════════════════════════════════════════════════════ */
+body.theme-retro {
+  font-family: 'Press Start 2P', system-ui, sans-serif !important;
+  text-transform: uppercase;
 }
 
-.neon-border {
-  border: 1px solid var(--border);
-  box-shadow: 0 0 15px rgba(0, 160, 255, 0.2);
+body.theme-retro h1 { font-size: 2.2rem; letter-spacing: 0; }
+body.theme-retro h2, 
+body.theme-retro span:not(.skill-icon), 
+body.theme-retro p, 
+body.theme-retro button:not(.skill-btn) { 
+  font-size: 0.6rem !important; 
+  letter-spacing: 0 !important; 
+}
+.skill-icon { font-size: 1.5rem !important; }
+
+body.theme-retro .glass { 
+  backdrop-filter: none !important; 
+  -webkit-backdrop-filter: none !important;
+  background: var(--theme-bg) !important; 
+  border: 2px solid var(--theme-text) !important;
+  box-shadow: none !important;
 }
 
-@keyframes pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
-  100% { opacity: 1; transform: scale(1); }
+body.theme-retro button {
+  border: 2px solid var(--theme-text) !important;
+  box-shadow: 4px 4px 0px var(--theme-text) !important;
+  margin-bottom: 4px;
 }
 
-.pulse {
-  animation: pulse 2s infinite ease-in-out;
+body.theme-retro button:active {
+  box-shadow: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATIONS — Snake Food: Reforged
+═══════════════════════════════════════════════════════ */
+@keyframes neon-border-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 5px color-mix(in srgb, var(--theme-buy), transparent 80%);
+    border-color: color-mix(in srgb, var(--theme-buy), transparent 90%);
+  }
+  50% { 
+    box-shadow: 0 0 20px var(--theme-buy), inset 0 0 10px color-mix(in srgb, var(--theme-buy), transparent 70%);
+    border-color: var(--theme-buy);
+    transform: scale(1.02);
+  }
+}
+
+.btn-upgrade-blink {
+  background-color: var(--theme-buy) !important;
+  color: var(--theme-buyText, #000) !important;
+  border: 2px solid transparent !important;
+  animation: neon-border-pulse 1.2s infinite ease-in-out;
+  font-weight: 900 !important;
+}
+
+.btn-upgrade-matte {
+  background-color: color-mix(in srgb, var(--theme-buy), #000 60%) !important;
+  color: var(--theme-buyMatteText, color-mix(in srgb, var(--theme-text), transparent 60%)) !important;
+  border: 1px solid color-mix(in srgb, var(--theme-buy), transparent 80%) !important;
+  opacity: 0.7;
 }

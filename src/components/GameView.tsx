@@ -7,15 +7,27 @@ interface GameViewProps {
   onHit: (dmg: number) => void
   onHeal: (amt: number) => void
   onTimeUpdate: (time: number) => void
+  onFuryUpdate: (progress: number) => void
+  onFuryActiveChange: (active: boolean, mode: string) => void
   health: number
   maxHealth: number
+  appearance: any
+  furyStats: { level: number }
+  coinStats: { level: number }
 }
 
 export interface GameViewRef {
   activateInvisibility: (duration: number) => void
   toggleFrostAura: (active: boolean) => void
-  activateSacrifice: (duration: number) => void
+  activateSacrifice: (duration: number, healAmt?: number) => void
+  activatePhantomBlock: (duration: number, count: number) => void
+  activateClones: (duration: number, count: number) => void
+  activateGainZone: (duration: number, radius: number) => void
+  activateExplosiveBait: (duration: number, slowAmt: number) => void
+  activateIntangibility: (duration: number) => void
+  start: () => void
   stop: () => void
+  triggerSwap: () => void
 }
 
 export const GameView = forwardRef<GameViewRef, GameViewProps>((props, ref) => {
@@ -39,11 +51,32 @@ export const GameView = forwardRef<GameViewRef, GameViewProps>((props, ref) => {
     toggleFrostAura: (active: boolean) => {
       engineRef.current?.toggleFrostAura(active)
     },
-    activateSacrifice: (duration: number) => {
-      engineRef.current?.activateSacrifice(duration)
+    activateSacrifice: (duration: number, healAmt?: number) => {
+      engineRef.current?.activateSacrifice(duration, healAmt)
+    },
+    activatePhantomBlock: (duration: number, count: number) => {
+        engineRef.current?.activatePhantomBlock(duration, count)
+    },
+    activateClones: (duration: number, count: number) => {
+        engineRef.current?.activateClones(duration, count)
+    },
+    activateGainZone: (duration: number, radius: number) => {
+        engineRef.current?.activateGainZone(duration, radius)
+    },
+    activateExplosiveBait: (duration: number, slowAmt: number) => {
+        engineRef.current?.activateExplosiveBait(duration, slowAmt)
+    },
+    activateIntangibility: (duration: number) => {
+        engineRef.current?.activateIntangibility(duration)
+    },
+    start: () => {
+      engineRef.current?.start()
     },
     stop: () => {
       engineRef.current?.stop()
+    },
+    triggerSwap: () => {
+      engineRef.current?.triggerSwap()
     }
   }))
 
@@ -75,11 +108,6 @@ export const GameView = forwardRef<GameViewRef, GameViewProps>((props, ref) => {
         
         console.log("✅ Anexando Canvas...")
         containerRef.current.appendChild(app.canvas)
-        
-        app.canvas.style.width = '100%'
-        app.canvas.style.height = '100%'
-        app.canvas.style.objectFit = 'contain'
-        app.canvas.style.borderRadius = '16px'
         
         // Passamos uma proxy ou uma função que resolve as props atuais para evitar closures obsoletas
         engine = new GameEngine(app, propsRef.current)
@@ -115,29 +143,10 @@ export const GameView = forwardRef<GameViewRef, GameViewProps>((props, ref) => {
     }
   }, [props])
 
-  const handleInteraction = (e: React.PointerEvent) => {
-    if (e.cancelable) e.preventDefault()
-    if (engineRef.current) {
-      console.log("👆 Interação Imediata (PointerDown)")
-      engineRef.current.triggerSwap()
-    }
-  }
-
   return (
     <div 
       ref={containerRef} 
-      onPointerDown={handleInteraction}
-      className="game-canvas-container"
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        touchAction: 'none'
-      }}
+      className="game-canvas-container w-full h-full flex items-center justify-center overflow-hidden cursor-pointer touch-none"
     />
   )
 })
