@@ -11,6 +11,7 @@ import {
   getCoinMultiplierForLevel,
   getFuryEfficiencyForLevel
 } from '../utils/progression'
+import { SF_UI } from '../utils/ui-system'
 
 interface SkillsMenuProps {
   coins: number
@@ -328,16 +329,16 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
                   )}
                    <div className="flex items-center gap-3 ml-auto flex-wrap justify-end">
                     <span className={statBadgeClass}>
-                      <Icons.Battery className="w-4 h-4 text-gold" /> {cdStr}
+                       <Icons.Battery className="w-4 h-4 text-gold" /> {cdStr}
                     </span>
                     <span className={statBadgeClass}>
-                      <Icons.Cooldown className="w-4 h-4 text-neon-green" /> {durStr}
+                       <Icons.Cooldown className="w-4 h-4 text-neon-green" /> {durStr}
                     </span>
                     <span className={statBadgeClass}>
-                      <Icons.Extra className="w-4 h-4 text-neon-pink" /> {extra || 'N/A'}
+                       <Icons.Extra className="w-4 h-4 text-neon-pink" /> {extra || 'N/A'}
                     </span>
                     <span className={statBadgeClass}>
-                      <Icons.Cast className="w-4 h-4 text-neon-blue" /> {castStr}
+                       <Icons.Cast className="w-4 h-4 text-neon-blue" /> {castStr}
                     </span>
                   </div>
                 </div>
@@ -348,8 +349,5 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
       </div>
       <TooltipPortal />
     </div>
-  )
-}
-
   )
 }

@@ -1,3 +1,4 @@
+import React from 'react';
 import { SF_UI } from '../utils/ui-system';
 
 interface HealthBarProps {
@@ -36,6 +37,5 @@ export const HealthBar: React.FC<HealthBarProps> = ({ current, max, theme }) => 
         <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_91%,rgba(255,255,255,0.03)_91%)] bg-[length:8%_100%] pointer-events-none" />
       </div>
     </div>
-
   );
 };
