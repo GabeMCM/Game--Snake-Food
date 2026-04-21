@@ -20,20 +20,30 @@ interface LoginModalProps {
 export const LoginModal: React.FC<LoginModalProps> = ({ 
   onBack, onLoginSuccess, isAuthenticated, userNickname, userEmail, avatarUrl, coins, level, bestTime, onLogout 
 }) => {
+  const [isConnecting, setIsConnecting] = React.useState(false);
+
   const handleLogin = async (provider: 'google' | 'apple') => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: getRedirectUrl()
+    setIsConnecting(true);
+    
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: getRedirectUrl()
+        }
+      });
+
+      if (error) {
+        console.error(`Erro ao entrar com ${provider}:`, error.message);
+        setIsConnecting(false);
+      } else {
+        // We are redirecting. Do NOT call onLoginSuccess() yet, 
+        // as that might close the modal before the browser navigates away.
+        console.log("🔗 [Auth] Redirecionando para:", getRedirectUrl());
       }
-    });
-
-    console.log("🔗 [Auth] Redirecionando para:", getRedirectUrl());
-
-    if (error) {
-      console.error(`Erro ao entrar com ${provider}:`, error.message);
-    } else {
-      onLoginSuccess();
+    } catch (e) {
+      console.error("Erro inesperado na conexão:", e);
+      setIsConnecting(false);
     }
   };
 
@@ -159,15 +169,26 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <div className="flex flex-col gap-4">
               <button
                 onClick={() => handleLogin('google')}
-                className={`${SF_UI.button.primary} flex items-center justify-center gap-4`}
+                disabled={isConnecting}
+                className={`${SF_UI.button.primary} flex items-center justify-center gap-4 ${isConnecting ? 'opacity-80' : ''}`}
               >
-                <Icons.User className="w-5 h-5" />
-                CONECTAR VIA GOOGLE
+                {isConnecting ? (
+                  <>
+                    <Icons.Loading className="w-5 h-5 animate-spin" />
+                    CONECTANDO...
+                  </>
+                ) : (
+                  <>
+                    <Icons.User className="w-5 h-5" />
+                    CONECTAR VIA GOOGLE
+                  </>
+                )}
               </button>
               
               <button
                 onClick={onBack}
-                className={`${SF_UI.button.secondary}`}
+                disabled={isConnecting}
+                className={`${SF_UI.button.secondary} ${isConnecting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 IGNORAR E JOGAR OFFLINE
               </button>
