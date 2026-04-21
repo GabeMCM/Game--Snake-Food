@@ -14,6 +14,7 @@ export interface GameProps {
   onTimeUpdate: (time: number) => void
   onFuryUpdate: (progress: number) => void
   onFuryActiveChange: (active: boolean, mode: string) => void
+  onBaitConsumed: () => void // Novo evento para recarga de skills
   health: number
   maxHealth: number
   appearance: PlayerData['settings']
@@ -62,11 +63,13 @@ export class GameEngine {
 
   private isSacrificeActive: boolean = false
   private sacrificeTimer: number = 0
+  private sacrificeInitialDuration: number = 0
   private sacrificeHealAmt: number = 30
 
   // NOVAS Habilidades (Reforçado)
   private phantomBlocks: Point[] = []
-  private blockTimer: number = 0
+  private blockDurationTimer: number = 0 // Quanto tempo os blocos duram no mapa
+  private blockLengthRemaining: number = 0 // Quantos gomos de parede ainda faltam criar
   private blockGraphic: Graphics
 
   private clones: Point[] = []
@@ -91,7 +94,7 @@ export class GameEngine {
   private passiveFuryTimer: number = 0
   private isFuryActive: boolean = false
   private furyTimer: number = 0
-  private furyComplication: 'NONE' | 'SMALL_BOARD' | 'MIRROR' | 'ILLUSION' = 'NONE'
+  private furyComplication: 'NONE' | 'MIRROR' | 'SMALL_BOARD' | 'ILLUSION' = 'NONE'
   private furyMoveCount: number = 0
   private furyFilter: ColorMatrixFilter = new ColorMatrixFilter()
   private secondarySnake: Point[] = []
@@ -126,13 +129,16 @@ export class GameEngine {
     this.fakeGraphic = new Graphics()
     this.fakeGraphic2 = new Graphics()
 
-    this.container.addChild(this.fakeGraphic)
-    this.container.addChild(this.fakeGraphic2)
-    this.container.addChild(this.playerGraphic)
-
     // Inicializar Graphics das novas skills
     this.blockGraphic = new Graphics()
     this.container.addChild(this.blockGraphic)
+
+    // Iscas (Meio)
+    this.container.addChild(this.fakeGraphic)
+    this.container.addChild(this.fakeGraphic2)
+
+    // Player (Top)
+    this.container.addChild(this.playerGraphic)
 
     this.gainZoneGraphic = new Graphics()
     this.container.addChild(this.gainZoneGraphic)
@@ -213,11 +219,15 @@ export class GameEngine {
     }
   }
 
-  public activateSacrifice(durationMs: number, healAmt: number = 30) {
+  public activateSacrifice(durationMs: number, healPercent: number = 30) {
     this.isSacrificeActive = true
     this.sacrificeTimer = durationMs
-    this.sacrificeHealAmt = healAmt
-    this.playerGraphic.tint = 0xFF3C50 // Avermelhado para indicar perigo/sacrifício
+    this.sacrificeInitialDuration = durationMs
+    
+    // Cura baseada no HP ATUAL (como solicitado)
+    // Se estiver com 10 HP e cura for 60%, curará 6 HP no total da duração.
+    this.sacrificeHealAmt = (this.props.health * healPercent) / 100
+    this.playerGraphic.tint = 0xFF6B7A // Vermelho suave/Cura
   }
 
   public activateIntangibility(durationMs: number) {
@@ -226,13 +236,17 @@ export class GameEngine {
     this.updateGraphics()
   }
 
-  public activatePhantomBlock(durationMs: number, count: number) {
+  public activatePhantomBlock(durationMs: number, length: number) {
     this.phantomBlocks = []
-    for (let i = 0; i < count; i++) {
-      // Blocos aleatórios, mas não em cima da cobra ou player
-      this.phantomBlocks.push(this.getRandomPos(false, this.playerPos, GRID_SIZE * 3))
+    this.blockDurationTimer = durationMs
+    
+    // Gerar N blocos em posições aleatórias (conforme solicitado pelo usuário)
+    // Evita o player e a cabeça da cobra (min 5 tiles de distância)
+    for (let i = 0; i < length; i++) {
+        const pos = this.getRandomPos(false, this.playerPos, 5 * GRID_SIZE)
+        this.phantomBlocks.push(pos)
     }
-    this.blockTimer = durationMs
+    
     this.drawObstacles()
   }
 
@@ -277,42 +291,17 @@ export class GameEngine {
     this.furyPoints = 0
     this.furyMoveCount = 0
 
-    // Escolher complicação baseada no nível. 
-    // Se nível >= 5, excluímos 'NONE' para garantir que sempre ative algo como solicitado.
-    const available: ('NONE' | 'SMALL_BOARD' | 'MIRROR' | 'ILLUSION')[] = []
-    if (level >= 5) available.push('SMALL_BOARD')
-    if (level >= 10) available.push('MIRROR')
-    if (level >= 15) available.push('ILLUSION')
-    
-    if (available.length === 0) {
-        this.furyComplication = 'NONE'
+    // No LV 5+, a cobra espelhada pode aparecer de forma randômica (50% de chance).
+    if (level >= 5) {
+        this.furyComplication = Math.random() > 0.5 ? 'MIRROR' : 'NONE'
     } else {
-        this.furyComplication = available[Math.floor(Math.random() * available.length)]
+        this.furyComplication = 'NONE'
     }
     
     console.log(`🔥 FÚRIA ATIVADA! Complicação: ${this.furyComplication}`)
 
-    if (this.furyComplication === 'SMALL_BOARD') {
-        const padding = 2 * GRID_SIZE
-        this.furySafeZone = new Rectangle(padding, padding, GAME_WIDTH - padding * 2, GAME_HEIGHT - padding * 2)
-        
-        // TELEPORTE OBRIGATÓRIO: Sempre remove o player do perigo ao encolher
-        console.log("📍 Fúria Ativada! Teleportando player para zona segura central...")
-        // Forçamos ele para uma área segura garantida (centro da SafeZone)
-        this.playerPos = this.getRandomPos(false) 
-        
-        this.playerGraphic.x = this.playerPos.x
-        this.playerGraphic.y = this.playerPos.y
-        
-        // Reposicionar isca também para garantir que caia dentro
-        this.fakePos = this.getRandomPos(true, this.playerPos, 3 * GRID_SIZE)
-        
-        // Desenhar os muros uma única vez (evita flickering e processamento extra)
-        this.drawFurySafeZone()
-    } else {
-        this.furySafeZone = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT)
-        this.furyZoneGraphic.clear()
-    }
+    this.furySafeZone = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT)
+    this.furyZoneGraphic.clear()
 
     if (this.furyComplication === 'MIRROR') {
       this.startMirrorSnake()
@@ -323,6 +312,14 @@ export class GameEngine {
     // Ativar Filtro
     this.container.filters = [this.furyFilter]
     this.props.onFuryActiveChange(true, this.furyComplication)
+    
+    // Garantir que a isca primária seja reposicionada e esteja visível
+    this.fakePos = this.getRandomPos(true, this.playerPos, 3 * GRID_SIZE)
+    this.fakeGraphic.visible = true
+    this.fakeGraphic.alpha = 1
+
+    // Forçar atualização imediata para sincronizar com o filtro
+    this.updateGraphics()
   }
 
   private startMirrorSnake() {
@@ -408,7 +405,7 @@ export class GameEngine {
 
     // Reset de NOVAS habilidades
     this.phantomBlocks = []
-    this.blockTimer = 0
+    this.blockDurationTimer = 0
     this.blockGraphic.clear()
 
     this.clones = []
@@ -489,9 +486,9 @@ export class GameEngine {
     this.props.onTimeUpdate((now - this.startTime) / 1000)
 
     // Gerenciar NOVAS Habilidades
-    if (this.blockTimer > 0) {
-      this.blockTimer -= dt
-      if (this.blockTimer <= 0) {
+    if (this.blockDurationTimer > 0) {
+      this.blockDurationTimer -= dt
+      if (this.blockDurationTimer <= 0) {
         this.phantomBlocks = []
         this.blockGraphic.clear()
       }
@@ -542,7 +539,15 @@ export class GameEngine {
     }
 
     if (this.sacrificeTimer > 0) {
+      const dtSec = dt / 1000
       this.sacrificeTimer -= dt
+      
+      // Cura gradual (Regeneração)
+      const regenStep = (this.sacrificeHealAmt / (this.sacrificeInitialDuration / 1000)) * dtSec
+      if (regenStep > 0) {
+        this.props.onHeal(regenStep)
+      }
+
       if (this.sacrificeTimer <= 0) {
         this.isSacrificeActive = false
         this.playerGraphic.tint = 0xFFFFFF
@@ -599,14 +604,18 @@ export class GameEngine {
         if (this.furyTimer <= 0) {
           this.onFuryEnd()
         } else {
-          // Piscar Inverso Intensivo (Blink rápido)
-          // Usamos o seno para alternar entre 0 (normal) e 1 (invertido) rapidamente
-          const blinkFreq = 15 // Ajuste para intensidade
-          const intensity = Math.sin(now / 1000 * blinkFreq)
-          if (intensity > 0) {
+          // Acessibilidade: Se desativar flashing, mantém invertido sem piscar
+          if (this.props.appearance.disableFlashing) {
             this.furyFilter.negative(false)
           } else {
-            this.furyFilter.reset()
+            // Piscar Inverso Intensivo (Blink rápido)
+            const blinkFreq = 15 
+            const intensity = Math.sin(now / 1000 * blinkFreq)
+            if (intensity > 0) {
+              this.furyFilter.negative(false)
+            } else {
+              this.furyFilter.reset()
+            }
           }
         }
       } else {
@@ -637,9 +646,6 @@ export class GameEngine {
     if (this.isFrostAuraActive) {
       this.drawFrostAura()
     }
-    if (this.isFuryActive && this.furyComplication === 'SMALL_BOARD') {
-        this.drawFurySafeZone()
-    }
 
     const moveInterval = 1000 / ((SNAKE_SPEED + this.snake.length * 0.2) * speedMult)
     if (speedMult > 0 && now - this.lastMoveTime > moveInterval) {
@@ -649,25 +655,25 @@ export class GameEngine {
   }
 
   private drawFurySafeZone() {
+    // Método mantido para compatibilidade mas sem efeito (muros removidos)
     this.furyZoneGraphic.clear()
-    const wallColor = 0xFF003C // Vermelho Predatório
-    const thickness = 10
-    
-    // Desenha bordas grossas ao redor da zona segura
-    // Usamos rect e stroke com alinhamento externo (1)
-    this.furyZoneGraphic.rect(this.furySafeZone.x, this.furySafeZone.y, this.furySafeZone.width, this.furySafeZone.height)
-    this.furyZoneGraphic.stroke({ width: thickness, color: wallColor, alpha: 0.8, alignment: 1 })
   }
 
   private drawBackground() {
-    const theme = this.props.appearance.theme
-    if (theme === 'sky') this.drawSky()
-    else if (theme === 'universe') this.drawUniverse()
-    else this.bgGraphics.clear()
+    const themeId = this.props.appearance.theme
+    const theme = THEMES[themeId] || THEMES.neon
+    
+    // SEMPRE limpar e desenhar retângulo sólido de fundo no bgGraphics
+    // Isso garante que o fundo SEJA PARTE do container e sofra os mesmos filtros (como a Fúria)
+    this.bgGraphics.clear()
+    this.bgGraphics.rect(0, 0, GAME_WIDTH, GAME_HEIGHT)
+    this.bgGraphics.fill({ color: theme.colors.engineBg, alpha: 1 })
+
+    if (themeId === 'sky') this.drawSky()
+    else if (themeId === 'universe') this.drawUniverse()
   }
 
   private drawSky() {
-    this.bgGraphics.clear()
     const t = performance.now() / 1000
 
     // Desenhar algumas nuvens estilizadas
@@ -690,7 +696,6 @@ export class GameEngine {
   }
 
   private drawUniverse() {
-    this.bgGraphics.clear()
 
     // Estrelas fixas simples
     const stars = [
@@ -778,9 +783,6 @@ export class GameEngine {
   private moveSnake() {
     if (this.isFuryActive) {
         this.furyMoveCount++
-        if (this.furyComplication === 'ILLUSION') {
-            this.container.alpha = (this.furyMoveCount % 3 === 0) ? 0.3 : 1.0
-        }
     }
     const head = this.snake[0]
 
@@ -878,6 +880,9 @@ export class GameEngine {
       this.furyPoints = Math.min(this.maxFuryPoints, this.furyPoints + 1)
       this.props.onFuryUpdate((this.furyPoints / this.maxFuryPoints) * 100)
     }
+    
+    // Disparar evento para recarga de skills
+    this.props.onBaitConsumed()
 
     // Recompensa básica + multiplicador de fúria (Risco/Retorno)
     let reward = 1
@@ -1009,17 +1014,6 @@ export class GameEngine {
 
     this.drawDot(this.playerGraphic, this.playerPos, pColorObj, true, false, this.isIntangible, this.props.appearance.playerShape, playerRot)
 
-    // Isca real (pode ser TNT)
-    const baitColor = theme.colors.engineBait
-    this.drawDot(this.fakeGraphic, this.fakePos, baitColor, false, this.isExplosiveBaitActive, false, 'rounded')
-
-    // Terceira isca (Fúria Mirror)
-    if (this.isFuryActive && this.furyComplication === 'MIRROR' && this.fakePos2.x > 0) {
-        this.drawDot(this.fakeGraphic2, this.fakePos2, baitColor, false, false, false, 'rounded')
-    } else {
-        this.fakeGraphic2.clear()
-    }
-
     // Desenhar Cobra
     this.snake.forEach((pos, i) => {
       const g = this.snakeGraphics[i]
@@ -1105,6 +1099,21 @@ export class GameEngine {
         g.y = pos.y
       }
     })
+
+    // ── ISCAS (Desenhar por ÚLTIMO para garantir visibilidade absoluta) ──
+    const baitColor = theme.colors.engineBait
+    this.fakeGraphic.visible = true
+    this.fakeGraphic.alpha = 1
+    this.drawDot(this.fakeGraphic, this.fakePos, baitColor, false, this.isExplosiveBaitActive, false, 'rounded')
+
+    // Terceira isca (Fúria Mirror)
+    if (this.isFuryActive && this.furyComplication === 'MIRROR' && this.fakePos2.x > 0) {
+        this.fakeGraphic2.visible = true
+        this.fakeGraphic2.alpha = 1
+        this.drawDot(this.fakeGraphic2, this.fakePos2, baitColor, false, false, false, 'rounded')
+    } else {
+        this.fakeGraphic2.clear()
+    }
   }
 
   private getLighterColor(hex: number): number {
@@ -1328,9 +1337,14 @@ export class GameEngine {
   private drawObstacles() {
     this.blockGraphic.clear()
     this.phantomBlocks.forEach(pos => {
-      this.blockGraphic.roundRect(pos.x + 2, pos.y + 2, GRID_SIZE - 4, GRID_SIZE - 4, 4)
-      this.blockGraphic.fill({ color: 0x94A3B8, alpha: 0.8 })
-      this.blockGraphic.stroke({ width: 2, color: 0xFFFFFF, alpha: 0.4 })
+      // Estilo Fantasma: Borda neon ciano/azul e preenchimento semi-transparente
+      this.blockGraphic.roundRect(pos.x + 1, pos.y + 1, GRID_SIZE - 2, GRID_SIZE - 2, 6)
+      this.blockGraphic.fill({ color: 0xFBBF24, alpha: 0.15 }) // Dourado fantasmagórico (cor original da skill)
+      this.blockGraphic.stroke({ width: 2, color: 0xFBBF24, alpha: 0.6 })
+      
+      // Brilho central
+      this.blockGraphic.rect(pos.x + 6, pos.y + 6, GRID_SIZE - 12, GRID_SIZE - 12)
+      this.blockGraphic.fill({ color: 0xFFFFFF, alpha: 0.3 })
     })
   }
 

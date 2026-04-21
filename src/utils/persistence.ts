@@ -2,16 +2,14 @@ export type ColorValue = number | { primary: number; secondary: number };
 
 export interface PlayerData {
   coins: number;
-  maxHealth: number;
-  unlockedSkills: { [id: string]: { level: number } };
+  level: number;
+  exp: number;
+  unlockedSkills: { [id: string]: { level: number, exp: number } };
   equippedSkills: string[];
   lastHighScore: number;
-  furyStats: {
-    level: number;
-  };
-  coinStats: {
-    level: number;
-  };
+  // Stats globais agora derivados do Level, mas mantemos os objetos para retrocompatibilidade de estrutura se necessário
+  furyStats: { level: number };
+  coinStats: { level: number };
   // Cosméticos
   unlockedCosmetics: string[];
   settings: {
@@ -20,6 +18,7 @@ export interface PlayerData {
     snakeColor: ColorValue;
     snakeShape: 'rounded' | 'square' | 'circle' | 'triangle' | 'rhombus';
     theme: 'neon' | 'gameboy' | 'nokia' | 'universe' | 'sky';
+    disableFlashing: boolean;
   };
 }
 
@@ -27,7 +26,8 @@ const STORAGE_KEY = 'snake_food_reforged_save_v2';
 
 const DEFAULT_DATA: PlayerData = {
   coins: 100,
-  maxHealth: 100,
+  level: 1,
+  exp: 0,
   unlockedSkills: {},
   equippedSkills: [],
   lastHighScore: 0,
@@ -43,7 +43,8 @@ const DEFAULT_DATA: PlayerData = {
     playerShape: 'rounded',
     snakeColor: { primary: 0x00FF82, secondary: 0x00FF82 },
     snakeShape: 'rounded',
-    theme: 'neon'
+    theme: 'neon',
+    disableFlashing: true
   }
 };
 
@@ -53,25 +54,28 @@ export const loadPlayerData = (): PlayerData => {
   try {
     const data = JSON.parse(saved);
     
-    // Migração: Converter cores simples para objetos dual-color
-    if (typeof data.settings?.playerColor === 'number') {
-      data.settings.playerColor = { primary: data.settings.playerColor, secondary: data.settings.playerColor };
-    }
-    if (typeof data.settings?.snakeColor === 'number') {
-      data.settings.snakeColor = { primary: data.settings.snakeColor, secondary: data.settings.snakeColor };
-    }
-
-    // Migração: Converter níveis de fúria separados para o único unificado
-    if (data.furyStats && (data.furyStats.durationLevel || data.furyStats.rewardLevel)) {
-      data.furyStats.level = Math.max(data.furyStats.level || 1, data.furyStats.durationLevel || 1, data.furyStats.rewardLevel || 1);
-    }
-
-    // Migração: Inicializar nível de moedas se não existir
-    if (!data.coinStats) {
-      data.coinStats = { level: 1 };
+    // Inicialização de novos campos se não existirem
+    if (data.level === undefined) data.level = 1;
+    if (data.exp === undefined) data.exp = 0;
+    
+    // Remover maxHealth legado para garantir cálculos dinâmicos limpos
+    if (data.maxHealth !== undefined) delete data.maxHealth;
+    
+    // Garantir que skills tenham campo exp
+    if (data.unlockedSkills) {
+      Object.keys(data.unlockedSkills).forEach(id => {
+        if (data.unlockedSkills[id].exp === undefined) {
+          data.unlockedSkills[id].exp = 0;
+        }
+      });
     }
 
-    return { ...DEFAULT_DATA, ...data, settings: { ...DEFAULT_DATA.settings, ...data.settings }, furyStats: { ...DEFAULT_DATA.furyStats, ...data.furyStats }, coinStats: { ...DEFAULT_DATA.coinStats, ...data.coinStats } };
+    return { 
+      ...DEFAULT_DATA, 
+      ...data, 
+      settings: { ...DEFAULT_DATA.settings, ...data.settings },
+      unlockedSkills: data.unlockedSkills || DEFAULT_DATA.unlockedSkills
+    };
   } catch (e) {
     return DEFAULT_DATA;
   }

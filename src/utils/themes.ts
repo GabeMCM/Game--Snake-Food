@@ -45,7 +45,7 @@ export interface ThemeConfig {
 }
 
 export const THEMES: Record<string, ThemeConfig> = {
-  // ── NEON (Padrão) ───────────────────────────────────────────
+  // ── NEON (Padrão - Verde) ───────────────────────────────────
   neon: {
     id: 'neon',
     name: 'NEON',
@@ -56,15 +56,15 @@ export const THEMES: Record<string, ThemeConfig> = {
     colors: {
       bg: '#080816',
       bgLight: '#0f0f19',
-      card: 'rgba(25, 25, 45, 0.7)',
+      card: 'rgba(25, 25, 45, 0.75)',
       text: '#f5f5ff',
       textDim: '#8c8caa',
       primary: '#00ff82', // Neon Green
-      secondary: '#10b981', // Emerald Green (Para botões e cobra)
-      accent: '#ffd700',
-      border: 'rgba(255, 255, 255, 0.1)',
-      glass: 'rgba(15, 15, 25, 0.7)',
-      buy: '#10b981', 
+      secondary: '#10b981', // Emerald Green
+      accent: '#00d2ff',    // Toque de ciano para brilho extra
+      border: 'rgba(255, 255, 255, 0.15)', // Alinhado com Black Neon
+      glass: 'rgba(15, 15, 30, 0.7)',
+      buy: '#00ff82', 
       buyText: '#000000',
       
       engineBg: 0x0a0a12,
@@ -73,7 +73,7 @@ export const THEMES: Record<string, ThemeConfig> = {
       enginePlayer: 0x00FF82,
       engineSnake: 0x10B981,
       engineBait: 0xF0F0F5,
-      engineAccent: 0xFFD700
+      engineAccent: 0x00D2FF
     }
   },
 

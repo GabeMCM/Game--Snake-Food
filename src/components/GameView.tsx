@@ -14,6 +14,7 @@ interface GameViewProps {
   appearance: any
   furyStats: { level: number }
   coinStats: { level: number }
+  onBaitConsumed: () => void
 }
 
 export interface GameViewRef {

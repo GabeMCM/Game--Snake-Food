@@ -37,6 +37,9 @@ export default defineConfig({
   ],
   server: {
     host: true,
-    port: 5174,
+    port: 3000,
   },
+  optimizeDeps: {
+    include: ['@supabase/supabase-js']
+  }
 })
