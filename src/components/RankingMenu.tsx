@@ -79,7 +79,7 @@ export const RankingMenu: React.FC<RankingMenuProps> = ({ onBack }) => {
           className={`flex-1 py-3 ${SF_UI.rounding.button} text-[0.65rem] font-black tracking-widest transition-all
                      ${category === 'LEVEL' ? 'bg-white text-black shadow-xl shadow-white/10' : 'text-white/40 hover:text-white/60'}`}
         >
-          GRAU ATLETA
+          GRAU
         </button>
       </div>
 

@@ -72,7 +72,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <div className="flex flex-col">
             <span className={`${SF_UI.typography.label}`}>PERFIL GLOBAL</span>
             <h1 className={`${SF_UI.typography.h1}`}>
-              {isAuthenticated ? 'CENTRAL DO ATLETA' : 'ACESSAR MINHA CONTA'}
+              {isAuthenticated ? 'CONTA' : 'ACESSAR CONTA'}
             </h1>
           </div>
         </div>

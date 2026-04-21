@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Icons } from './Icons'
 import { SKILLS, SKILL_RECHARGE_TYPES } from '../utils/skills'
@@ -105,20 +105,20 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
 
   return (
     <div 
-      className="animate-fade-in w-full h-full flex flex-col items-center overflow-y-auto custom-scrollbar bg-[#0c0c12]"
+      className="animate-fade-in w-full h-full flex flex-col landscape:sm:flex-row items-center overflow-hidden bg-[#0c0c12]"
       onScroll={() => activeTooltip && setActiveTooltip(null)}
     >
-      {/* ── FIXED STICKY HEADER ── */}
-      <div className="sticky top-0 z-30 w-full bg-[var(--theme-bg)]/90 backdrop-blur-3xl border-b border-white/5 px-4 pt-8 pb-6 flex flex-col gap-6 shadow-2xl shadow-black/60">
-        <div className="w-full max-w-lg md:max-w-4xl mx-auto flex items-center justify-between gap-4">
-
-          {/* Back and Title */}
-          <div className="flex items-center gap-4">
+      {/* ── LEFT SIDEBAR (LANDSCAPE) / STICKY HEADER (PORTRAIT) ── */}
+      <div className="z-30 w-full landscape:sm:w-[22rem] h-auto landscape:sm:h-full bg-[var(--theme-bg)]/90 landscape:sm:bg-[var(--theme-bg)]/60 backdrop-blur-3xl border-b landscape:sm:border-b-0 landscape:sm:border-r border-white/5 px-4 sm:px-6 pt-10 pb-6 flex flex-col gap-6 shadow-2xl shadow-black/60 overflow-y-auto no-scrollbar shrink-0">
+        
+        {/* Back and Title Row */}
+        <div className="w-full flex items-center justify-between landscape:sm:flex-col landscape:sm:items-start gap-4">
+          <div className="flex items-center landscape:sm:flex-col landscape:sm:items-start gap-4">
             <button className={`${SF_UI.button.back}`} onClick={onBack}>
               <Icons.Back className="w-5 h-5 opacity-40" />
             </button>
             <div className="flex flex-col">
-              <h2 className={`${SF_UI.typography.label} !opacity-40`}>MELHORIAS DO ATLETA</h2>
+              <h2 className={`${SF_UI.typography.label} !opacity-40`}>MELHORIAS</h2>
               <div className="flex items-center gap-2 text-[var(--theme-accent)] font-black mt-1">
                 <Icons.Coin className="w-5 h-5" />
                 <span className="text-xl tracking-tighter">{coins}</span>
@@ -126,15 +126,15 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
             </div>
           </div>
 
-          {/* Prominent Skill Slots */}
-          <div className={`flex items-center gap-4 bg-black/40 p-2 ${SF_UI.rounding.modal} border border-white/5 ${SF_UI.effects.glowPrimary}`}>
+          {/* Skill Slots Container */}
+          <div className={`flex items-center gap-3 bg-black/40 p-2 ${SF_UI.rounding.modal} border border-white/5 ${SF_UI.effects.glowPrimary}`}>
             {[0, 1].map(i => {
               const id = equippedSkills[i]
               const skill = id ? SKILLS.find(s => s.id === id) : null
               return (
                 <button
                   key={i}
-                  className={`w-14 h-14 ${SF_UI.rounding.full} flex items-center justify-center text-xl transition-all relative cursor-pointer
+                  className={`w-12 h-12 sm:w-14 sm:h-14 ${SF_UI.rounding.full} flex items-center justify-center text-xl transition-all relative cursor-pointer
                     ${skill
                       ? 'border-2 shadow-lg hover:scale-110 active:scale-95'
                       : 'border border-dashed border-white/10 bg-white/5 opacity-40 cursor-default'
@@ -148,8 +148,8 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
                   title={skill ? `Desequipar ${skill.name}` : ''}
                 >
                   {skill ? (
-                    React.createElement(Icons[skill.icon as keyof typeof Icons], { className: "w-7 h-7" })
-                  ) : <span className="text-white/10 text-xs font-black">+</span>}
+                    React.createElement(Icons[skill.icon as keyof typeof Icons], { className: "w-6 h-6 sm:w-7 sm:h-7" })
+                  ) : <span className="text-white/10 text-[0.65rem] font-black">+</span>}
                   {skill && (
                     <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red border-2 border-[var(--theme-bg)] flex items-center justify-center">
                       <span className="text-[8px] text-white font-black">✕</span>
@@ -158,53 +158,77 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
                 </button>
               )
             })}
-            <div className="px-2 flex flex-col items-center">
-              <span className="text-xs font-black text-white/40 leading-none">{equippedSkills.length}</span>
-              <div className="w-px h-3 bg-white/10 my-0.5" />
-              <span className="text-[0.6rem] font-black text-white/20 leading-none">2</span>
+            <div className="px-1 flex flex-col items-center">
+              <span className="text-[0.65rem] font-black text-white/40 leading-none">{equippedSkills.length}</span>
+              <div className="w-px h-2 bg-white/10 my-0.5" />
+              <span className="text-[0.5rem] font-black text-white/20 leading-none">2</span>
             </div>
           </div>
         </div>
 
-        {/* ── HEADER EXTENSION: Global Stats Info ── */}
-        <div className="w-full max-w-lg md:max-w-4xl mx-auto grid grid-cols-3 gap-3">
-          <div className={`${SF_UI.layout.card} !p-3 flex-col text-center`}>
-             <span className={`${SF_UI.typography.label}`}>Bônus Vida</span>
-             <span className="text-[0.8rem] font-black text-neon-green">+{getHealthBonusForLevel(level)} HP</span>
+        {/* Bonus Stats Section (Full Width in Sidebar) */}
+        <div className="w-full flex-col gap-2 landscape:sm:flex hidden">
+           <span className={`${SF_UI.typography.label} mb-2 block`}>BÔNUS PROTOCOLARES</span>
+           <div className="flex flex-col gap-2">
+              <div className={`${SF_UI.layout.card} !p-3 justify-between`}>
+                <span className={`${SF_UI.typography.label} !opacity-30`}>Vitalidade</span>
+                <span className="text-[0.8rem] font-black text-neon-green">+{getHealthBonusForLevel(level)} HP</span>
+              </div>
+              <div className={`${SF_UI.layout.card} !p-3 justify-between ${SF_UI.effects.glowAccent}`}>
+                <span className={`${SF_UI.typography.label} !opacity-30`}>Rentabilidade</span>
+                <span className="text-[0.8rem] font-black text-gold">+{((getCoinMultiplierForLevel(level) - 1) * 100).toFixed(0)}%</span>
+              </div>
+              <div className={`${SF_UI.layout.card} !p-3 justify-between ${SF_UI.effects.glowPrimary}`}>
+                <span className={`${SF_UI.typography.label} !opacity-30`}>Eficiência</span>
+                <span className="text-[0.8rem] font-black text-neon-blue">+{((getFuryEfficiencyForLevel(level) - 1) * 100).toFixed(1)}%</span>
+              </div>
+           </div>
+        </div>
+
+        {/* Mobile Horizontal Layout for Stats */}
+        <div className="w-full grid grid-cols-3 gap-2 landscape:sm:hidden">
+          <div className={`${SF_UI.layout.card} !p-2 flex-col text-center`}>
+             <span className="text-[0.5rem] font-black opacity-30 uppercase">HP</span>
+             <span className="text-[0.7rem] font-black text-neon-green">+{getHealthBonusForLevel(level)}</span>
           </div>
-          <div className={`${SF_UI.layout.card} !p-3 flex-col text-center ${SF_UI.effects.glowAccent}`}>
-             <span className={`${SF_UI.typography.label} !text-[var(--theme-accent)]`}>Bônus Moedas</span>
-             <span className="text-[0.8rem] font-black text-gold">+{((getCoinMultiplierForLevel(level) - 1) * 100).toFixed(0)}%</span>
+          <div className={`${SF_UI.layout.card} !p-2 flex-col text-center ${SF_UI.effects.glowAccent}`}>
+             <span className="text-[0.5rem] font-black opacity-30 uppercase">MOEDA</span>
+             <span className="text-[0.7rem] font-black text-gold">+{((getCoinMultiplierForLevel(level) - 1) * 100).toFixed(0)}%</span>
           </div>
-          <div className={`${SF_UI.layout.card} !p-3 flex-col text-center ${SF_UI.effects.glowPrimary}`}>
-             <span className={`${SF_UI.typography.label} !text-neon-blue`}>Efic. Fúria</span>
-             <span className="text-[0.8rem] font-black text-neon-blue">+{((getFuryEfficiencyForLevel(level) - 1) * 100).toFixed(1)}%</span>
+          <div className={`${SF_UI.layout.card} !p-2 flex-col text-center ${SF_UI.effects.glowPrimary}`}>
+             <span className="text-[0.5rem] font-black opacity-30 uppercase">FÚRIA</span>
+             <span className="text-[0.7rem] font-black text-neon-blue">+{((getFuryEfficiencyForLevel(level) - 1) * 100).toFixed(1)}%</span>
           </div>
         </div>
 
-        {/* ── SKILLS LEGEND ── */}
-         <div className="w-full max-w-lg md:max-w-4xl mx-auto flex items-center justify-center gap-6 py-3 border-y border-white/5 bg-white/2">
-            <div className="flex items-center gap-2 opacity-80">
-               <Icons.Battery className="w-4 h-4 text-gold" />
-               <span className={`${SF_UI.typography.label}`}>Recarga</span>
-            </div>
-            <div className="flex items-center gap-2 opacity-80">
-               <Icons.Cooldown className="w-4 h-4 text-neon-green" />
-               <span className={`${SF_UI.typography.label}`}>Duração</span>
-            </div>
-            <div className="flex items-center gap-2 opacity-80">
-             <Icons.Extra className="w-4 h-4 text-neon-pink" />
-             <span className={`${SF_UI.typography.label}`}>Bônus</span>
+        {/* Legend (Sidebar Bottom or Mobile Flex) */}
+        <div className="w-full mt-auto pt-6 border-t border-white/5 flex flex-wrap landscape:sm:flex-col gap-4 landscape:sm:gap-3 opacity-60">
+           <div className="flex items-center gap-2">
+             <Icons.Battery className="w-3.5 h-3.5 text-gold shrink-0" />
+             <span className="text-[0.55rem] font-black tracking-widest uppercase">REC</span>
+             <span className="landscape:sm:inline hidden text-[0.5rem] opacity-40 ml-auto">RECARGA</span>
            </div>
-           <div className="flex items-center gap-2 opacity-80">
-             <Icons.Cast className="w-4 h-4 text-neon-blue" />
-             <span className={`${SF_UI.typography.label}`}>Conjuração</span>
+           <div className="flex items-center gap-2">
+             <Icons.Cooldown className="w-3.5 h-3.5 text-neon-green shrink-0" />
+             <span className="text-[0.55rem] font-black tracking-widest uppercase">DUR</span>
+             <span className="landscape:sm:inline hidden text-[0.5rem] opacity-40 ml-auto">DURAÇÃO</span>
            </div>
-         </div>
+           <div className="flex items-center gap-2">
+             <Icons.Extra className="w-3.5 h-3.5 text-neon-pink shrink-0" />
+             <span className="text-[0.55rem] font-black tracking-widest uppercase">BON</span>
+             <span className="landscape:sm:inline hidden text-[0.5rem] opacity-40 ml-auto">BÔNUS</span>
+           </div>
+           <div className="flex items-center gap-2">
+             <Icons.Cast className="w-3.5 h-3.5 text-neon-blue shrink-0" />
+             <span className="text-[0.55rem] font-black tracking-widest uppercase">CON</span>
+             <span className="landscape:sm:inline hidden text-[0.5rem] opacity-40 ml-auto">CONJURAÇÃO</span>
+           </div>
+        </div>
       </div>
 
-      <div className="w-full max-w-lg md:max-w-4xl flex flex-col gap-6 px-4 pt-10">
-        <div className="menu-content-grid flex flex-col gap-6 pb-20">
+      {/* ── MAIN CONTENT (SCROLLABLE GRID) ── */}
+      <div className="flex-1 w-full h-full overflow-y-auto custom-scrollbar p-6 sm:p-10">
+        <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 pb-20">
            {SKILLS.map((s, idx) => ({ s, idx })).sort((a, b) => {
             const isEquippedA = equippedSkills.includes(a.s.id)
             const isEquippedB = equippedSkills.includes(b.s.id)
@@ -227,7 +251,7 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
               <div
                 key={skill.id}
                 className={`${cardClass} transition-transform active:scale-[0.99]
-                    ${!isUnlocked ? 'opacity-40 grayscale' : 'shadow-lg hover:shadow-[var(--skill-glow)]'}
+                    ${!isUnlocked ? 'opacity-40 grayscale shadow-inner' : 'shadow-lg hover:shadow-[var(--skill-glow)]'}
                   `}
                 style={{
                   ...(isUnlocked ? { '--skill-glow': `${skill.bgColor}22` } as any : {}),
@@ -235,7 +259,7 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
                 }}
               >
                 <div className={upperTierClass}>
-                  {/* Icon */}
+                  {/* Icon Box */}
                   <div
                     className={iconBoxClass}
                     style={{ backgroundColor: `${skill.bgColor}11`, color: skill.color, borderColor: `${skill.color}44` }}
@@ -243,7 +267,7 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
                     {React.createElement(Icons[skill.icon as keyof typeof Icons], { className: "w-7 h-7" })}
                   </div>
 
-                  {/* Info */}
+                  {/* Info Column */}
                   <div className="flex-1 min-w-0 flex flex-col justify-center gap-1">
                     <div className="flex items-center gap-3">
                       <TooltipTrigger 
@@ -259,7 +283,7 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
                     {!isUnlocked && <span className={`${SF_UI.typography.caption} text-white/20 tracking-widest`}>HABILIDADE BLOQUEADA</span>}
                   </div>
 
-                  {/* Action buttons */}
+                  {/* Action Column */}
                   <div className={actionColClass} onPointerDown={e => e.stopPropagation()}>
                     {!isUnlocked ? (
                       <button
@@ -271,7 +295,7 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
                       >
                         <div className="flex items-center gap-1.5">
                           <span className="text-sm font-black tracking-tighter leading-none">{skill.cost}</span>
-                          <Icons.Coin className="w-3 h-3" />
+                          <Icons.Coin className="w-3 h-3 text-[var(--theme-accent)]" />
                         </div>
                         <span className="text-[0.45rem] font-black uppercase mt-1 tracking-widest leading-none">ADQUIRIR</span>
                       </button>
@@ -297,9 +321,8 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
                 <div className={footerTierClass + " relative pt-6 pb-4"}>
                   {isUnlocked && (
                     <>
-                      {/* XP PROGRESS BAR FOR SKILLS */}
-                      <div className="absolute top-0 left-0 w-full px-5 h-1.5 flex items-center">
-                        <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full px-5 h-1 flex items-center">
+                        <div className="w-full h-full bg-white/5 rounded-full overflow-hidden">
                            <div 
                               className="h-full transition-all duration-1000"
                               style={{ 
@@ -327,18 +350,18 @@ export const SkillsMenu: React.FC<SkillsMenuProps> = ({
                       </div>
                     </>
                   )}
-                   <div className="flex items-center gap-3 ml-auto flex-wrap justify-end">
+                   <div className="flex items-center gap-2 sm:gap-3 ml-auto flex-wrap justify-end">
                     <span className={statBadgeClass}>
-                       <Icons.Battery className="w-4 h-4 text-gold" /> {cdStr}
+                       <Icons.Battery className="w-3.5 h-3.5 text-gold" /> {cdStr}
                     </span>
                     <span className={statBadgeClass}>
-                       <Icons.Cooldown className="w-4 h-4 text-neon-green" /> {durStr}
+                       <Icons.Cooldown className="w-3.5 h-3.5 text-neon-green" /> {durStr}
                     </span>
                     <span className={statBadgeClass}>
-                       <Icons.Extra className="w-4 h-4 text-neon-pink" /> {extra || 'N/A'}
+                       <Icons.Extra className="w-3.5 h-3.5 text-neon-pink" /> {extra || 'N/A'}
                     </span>
                     <span className={statBadgeClass}>
-                       <Icons.Cast className="w-4 h-4 text-neon-blue" /> {castStr}
+                       <Icons.Cast className="w-3.5 h-3.5 text-neon-blue" /> {castStr}
                     </span>
                   </div>
                 </div>

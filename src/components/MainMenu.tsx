@@ -49,39 +49,38 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         </div>
       </div>
 
-      <div className={`animate-fade-in relative z-10 w-full h-full flex flex-col items-center justify-between p-6 sm:p-10 pt-12`}>
+      <div className={`animate-fade-in relative z-10 w-full h-full flex flex-col items-center justify-between p-4 sm:p-10 pt-10 sm:pt-12`}>
 
         {/* ── HEADER ── */}
-        <div className="w-full flex items-center justify-between px-2 max-w-6xl">
-          <div className="flex items-center gap-5 group cursor-pointer active:scale-95 transition-all" onClick={onOpenProfile}>
+        <div className="w-full flex items-start justify-between px-2 max-w-6xl gap-4">
+          <div className="flex items-center gap-3 sm:gap-5 group cursor-pointer active:scale-95 transition-all flex-1 min-w-0" onClick={onOpenProfile}>
             <div
-              className={`w-14 h-14 ${SF_UI.rounding.avatar} border flex items-center justify-center relative overflow-hidden shadow-lg
+              className={`w-12 h-12 sm:w-14 sm:h-14 ${SF_UI.rounding.avatar} border flex items-center justify-center relative overflow-hidden shadow-lg shrink-0
                           ${isAuthenticated ? `${SF_UI.effects.glowPrimary} bg-neon-blue/10` : 'bg-white/5 border-white/10 hover:bg-white/10 shadow-none'}`}
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt={userNickname} className="w-full h-full object-cover" />
               ) : isAuthenticated ? (
-                <Icons.User className="w-7 h-7 text-neon-blue" />
+                <Icons.User className="w-6 h-6 sm:w-7 sm:h-7 text-neon-blue" />
               ) : (
-                <Icons.User className="w-7 h-7 text-white/20" />
+                <Icons.User className="w-6 h-6 sm:w-7 sm:h-7 text-white/20" />
               )}
 
-              <div className={`absolute -bottom-1 -right-1 w-6 h-6 ${SF_UI.rounding.inner} bg-neon-blue border-[3px] border-[#0c0c12] flex items-center justify-center text-[0.7rem] font-black text-white`}>
+              <div className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 ${SF_UI.rounding.inner} bg-neon-blue border-[2px] sm:border-[3px] border-[#0c0c12] flex items-center justify-center text-[0.6rem] sm:text-[0.7rem] font-black text-white`}>
                 {level}
               </div>
             </div>
 
-            <div className="flex flex-col">
-              <span className={`${SF_UI.typography.label}`}>Status: {isAuthenticated ? 'Atleta' : 'Explorador'}</span>
-              <h2 className={`${SF_UI.typography.h1} !normal-case tracking-widest truncate max-w-[150px]`}>{userNickname}</h2>
-              <div className={`w-32 h-1.5 bg-white/5 ${SF_UI.rounding.full} mt-2 overflow-hidden`}>
+            <div className="flex flex-col min-w-0">
+              <h2 className={`${SF_UI.typography.h1} !normal-case tracking-widest truncate text-sm sm:text-base`}>{userNickname}</h2>
+              <div className={`w-24 sm:w-32 h-1 bg-white/5 ${SF_UI.rounding.full} mt-1.5 overflow-hidden`}>
                 <div className="h-full bg-neon-blue animate-exp-pulse" style={{ width: `${progress}%` }} />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className={`${SF_UI.rounding.card} glass px-6 py-2 border border-white/5 flex items-center gap-6 hidden sm:flex ${SF_UI.effects.glowPrimary}`}>
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <div className={`${SF_UI.rounding.card} glass px-4 sm:px-6 py-1.5 sm:py-2 border border-white/5 flex items-center gap-4 sm:gap-6 hidden sm:flex ${SF_UI.effects.glowPrimary}`}>
               <div className="flex flex-col items-center">
                 <span className={`${SF_UI.typography.label}`}>MOEDAS</span>
                 <span className="text-sm font-black text-[var(--theme-accent)]">{coins}</span>
@@ -94,17 +93,17 @@ export const MainMenu: React.FC<MainMenuProps> = ({
             </div>
 
             <button
-              className={`${SF_UI.button.back} ${SF_UI.rounding.card}`}
+              className={`${SF_UI.button.back} h-10 w-10 sm:h-11 sm:w-11 ${SF_UI.rounding.card}`}
               onClick={onOpenSettings}
             >
-              <Icons.Settings className="w-5 h-5" />
+              <Icons.Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
 
         {/* ── CENTRAL HUB (LANDSCAPE ONLY) ── */}
         <div className="hidden landscape:flex flex-col items-center w-full max-w-6xl flex-1 justify-center gap-12">
-
+          {/* ... existing landscape content ... */}
           <div className="flex flex-col items-center gap-1 mb-2">
             <h1 className="text-neon-glow bg-gradient-to-br from-[var(--theme-primary)] via-[var(--theme-secondary)] to-[var(--theme-accent)] bg-clip-text text-transparent text-6xl font-black tracking-[0.2em] uppercase">
               SNAKE FOOD
@@ -152,10 +151,10 @@ export const MainMenu: React.FC<MainMenuProps> = ({
         </div>
 
         {/* ── PORTRAIT LIST (EXCLUSIVE) ── */}
-        <div className="flex landscape:hidden portrait-only-list w-full flex-col items-center justify-center flex-1 gap-10">
+        <div className="flex landscape:hidden portrait-only-list w-full flex-col items-center justify-center flex-1 gap-6 sm:gap-10 pb-4">
           <div className="flex flex-col items-center gap-1">
-            <span className="text-[0.6rem] font-black tracking-[0.4em] text-white/30 uppercase">VOCÊ É A COMIDA</span>
-            <h1 className="text-neon-glow bg-gradient-to-br from-[var(--theme-primary)] via-[var(--theme-secondary)] to-[var(--theme-accent)] bg-clip-text text-transparent text-5xl font-black tracking-[0.1em] text-center">SNAKE FOOD</h1>
+            <span className="text-[0.55rem] sm:text-[0.6rem] font-black tracking-[0.4em] text-white/30 uppercase">VOCÊ É A COMIDA</span>
+            <h1 className="text-neon-glow bg-gradient-to-br from-[var(--theme-primary)] via-[var(--theme-secondary)] to-[var(--theme-accent)] bg-clip-text text-transparent text-4xl sm:text-5xl font-black tracking-[0.1em] text-center">SNAKE FOOD</h1>
           </div>
 
           <button

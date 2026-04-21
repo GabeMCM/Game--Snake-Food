@@ -61,7 +61,7 @@ export const THEMES: Record<string, ThemeConfig> = {
       textDim: '#8c8caa',
       primary: '#00ff82', // Neon Green
       secondary: '#10b981', // Emerald Green
-      accent: '#00d2ff',    // Toque de ciano para brilho extra
+      accent: '#fbbf24',    // Ouro para moedas e destaques
       border: 'rgba(255, 255, 255, 0.15)', // Alinhado com Black Neon
       glass: 'rgba(15, 15, 30, 0.7)',
       buy: '#00ff82', 
@@ -73,7 +73,7 @@ export const THEMES: Record<string, ThemeConfig> = {
       enginePlayer: 0x00FF82,
       engineSnake: 0x10B981,
       engineBait: 0xF0F0F5,
-      engineAccent: 0x00D2FF
+      engineAccent: 0xFBBF24
     }
   },
 
